@@ -1,15 +1,27 @@
 train:
-  _target_: src.datasets.DigiCamDataset
-  root: null
-  split: train
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: train[:90%]
+  masks_root: null
+  require_lensed: true
+  limit: null
+  shuffle_index: true
   instance_transforms: ${transforms.instance_transforms.train}
 val:
-  _target_: src.datasets.DigiCamDataset
-  root: null
-  split: val
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: train[90%:]
+  masks_root: null
+  require_lensed: true
+  limit: null
+  shuffle_index: false
   instance_transforms: ${transforms.instance_transforms.inference}
 test:
-  _target_: src.datasets.DigiCamDataset
-  root: null
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
   split: test
+  masks_root: null
+  require_lensed: true
+  limit: null
+  shuffle_index: false
   instance_transforms: ${transforms.instance_transforms.inference}

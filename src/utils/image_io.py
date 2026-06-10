@@ -5,16 +5,21 @@ import torch
 from PIL import Image
 
 
+def image_to_tensor(img: Image.Image) -> torch.Tensor:
+    """convert a pil image to float tensor in [0, 1]."""
+    img = img.convert("RGB")
+    arr = np.array(img)
+    x = torch.from_numpy(arr).float() / 255.0
+
+    return x.permute(2, 0, 1).contiguous()
+
+
 def load_image(path: str | Path) -> torch.Tensor:
-    """load png as float tensor in [0, 1]."""
+    """load an image file as float tensor in [0, 1]."""
     path = Path(path)
 
     with Image.open(path) as img:
-        img = img.convert("RGB")
-        arr = np.array(img)
-        x = torch.from_numpy(arr).float() / 255.0
-
-        return x.permute(2, 0, 1).contiguous()
+        return image_to_tensor(img)
 
 
 def save_image(tensor: torch.Tensor, path: str | Path) -> None:

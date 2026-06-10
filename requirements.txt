@@ -4,6 +4,7 @@ torchmetrics
 lpips
 numpy==1.26.4
 Pillow
+datasets
 tqdm
 matplotlib
 pandas

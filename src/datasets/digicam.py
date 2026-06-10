@@ -1,68 +1,43 @@
 from pathlib import Path
 
+from datasets import load_dataset
+from PIL import Image
+
 from src.datasets.base_dataset import BaseDataset
-from src.utils.image_io import load_image, load_mask
+from src.utils.image_io import image_to_tensor, load_mask
+
+DEFAULT_DATASET_NAME = "bezzam/DigiCam-Mirflickr-MultiMask-10K"
 
 
 class DigiCamDataset(BaseDataset):
-    """dataset for digicam train and test folders."""
+    """huggingface digicam train or test split."""
 
     def __init__(
         self,
-        root,
-        split=None,
-        lensless_dir="lensless",
-        masks_dir="masks",
-        lensed_dir="lensed",
-        image_ext="png",
+        dataset_name=None,
+        split="train",
+        masks_root=None,
         require_lensed=True,
         limit=None,
         shuffle_index=False,
         instance_transforms=None,
     ):
-        self.root = Path(root)
+        if dataset_name is None:
+            dataset_name = DEFAULT_DATASET_NAME
+        if masks_root is None:
+            raise ValueError("masks_root must be set to the directory with mask_*.npy files")
 
-        if split is not None:
-            self.root = self.root / split
+        self.masks_root = Path(masks_root)
+        if not self.masks_root.exists():
+            raise FileNotFoundError(f"missing masks root: {self.masks_root}")
 
-        self.lensless_dir = self.root / lensless_dir
-        self.masks_dir = self.root / masks_dir
-        self.lensed_dir = self.root / lensed_dir
         self.require_lensed = require_lensed
-
-        if not self.lensless_dir.exists():
-            raise FileNotFoundError(f"missing lensless dir: {self.lensless_dir}")
-        if not self.masks_dir.exists():
-            raise FileNotFoundError(f"missing masks dir: {self.masks_dir}")
-        if self.require_lensed and not self.lensed_dir.exists():
-            raise FileNotFoundError(f"missing lensed dir: {self.lensed_dir}")
-
-        lensless_files = sorted(self.lensless_dir.glob(f"*.{image_ext}"))
-
-        if not lensless_files:
-            raise RuntimeError(f"no {image_ext} images found in {self.lensless_dir}")
+        self.hf_dataset = load_dataset(dataset_name, split=split)
+        self._mask_cache = {}
 
         index = []
-        for lensless_path in lensless_files:
-            image_id = lensless_path.stem
-            mask_path = self.masks_dir / f"{image_id}.npy"
-            lensed_path = self.lensed_dir / f"{image_id}.{image_ext}"
-
-            if not mask_path.exists():
-                raise FileNotFoundError(f"missing mask file for {image_id}: {mask_path}")
-
-            item = {
-                "image_id": image_id,
-                "lensless": lensless_path,
-                "mask": mask_path,
-            }
-
-            if lensed_path.exists():
-                item["lensed"] = lensed_path
-            elif self.require_lensed:
-                raise FileNotFoundError(f"missing target image for {image_id}: {lensed_path}")
-
-            index.append(item)
+        for idx in range(len(self.hf_dataset)):
+            index.append({"image_id": f"{idx:06d}", "idx": idx})
 
         super().__init__(
             index=index,
@@ -71,17 +46,39 @@ class DigiCamDataset(BaseDataset):
             instance_transforms=instance_transforms,
         )
 
+    def _load_mask_by_label(self, mask_label):
+        label = int(mask_label)
+        if label not in self._mask_cache:
+            mask_path = self.masks_root / f"mask_{label}.npy"
+            if not mask_path.exists():
+                raise FileNotFoundError(f"missing mask file for label {label}: {mask_path}")
+            self._mask_cache[label] = load_mask(mask_path)
+        return self._mask_cache[label]
+
+    @staticmethod
+    def _row_image(row, field):
+        value = row[field]
+        if isinstance(value, Image.Image):
+            return value
+        if isinstance(value, dict):
+            return value["image"]
+        raise TypeError(f"unexpected {field} type: {type(value)}")
+
     def __getitem__(self, index):
         item = self._index[index]
+        row = self.hf_dataset[item["idx"]]
 
         sample = {
             "image_id": item["image_id"],
-            "lensless": load_image(item["lensless"]),
-            "mask": load_mask(item["mask"]),
+            "lensless": image_to_tensor(self._row_image(row, "lensless")),
+            "mask": self._load_mask_by_label(row["mask_label"]).clone(),
         }
 
-        if "lensed" in item:
-            sample["lensed"] = load_image(item["lensed"])
+        lensed = row.get("lensed")
+        if lensed is not None:
+            sample["lensed"] = image_to_tensor(self._row_image(row, "lensed"))
+        elif self.require_lensed:
+            raise FileNotFoundError(f"missing lensed image for {item['image_id']}")
 
         return self.preprocess_data(sample)
 
@@ -89,5 +86,4 @@ class DigiCamDataset(BaseDataset):
     def _assert_index_is_valid(index):
         for item in index:
             assert "image_id" in item
-            assert "lensless" in item
-            assert "mask" in item
+            assert "idx" in item
