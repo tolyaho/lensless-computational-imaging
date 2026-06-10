@@ -21,7 +21,7 @@ inference:
     name: SSIM
   - _target_: src.metrics.ImageMetrics
     metric:
-      _target_: torchmetrics.image.MeanSquaredError
+      _target_: torchmetrics.regression.MeanSquaredError
     device: ${metrics.device}
     name: MSE
   - _target_: src.metrics.LPIPSMetric

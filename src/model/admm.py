@@ -56,10 +56,10 @@ class ADMM(nn.Module):
         uy = torch.zeros_like(y)
 
         tv_thresh = self.tau / self.mu
+        data_rhs = fft_convolve_adjoint(measurement_mask * y, psf_fft)
 
         for _ in range(self.num_iters):
-            rhs = fft_convolve_adjoint(measurement_mask * y, psf_fft)
-            rhs = rhs + self.mu * (
+            rhs = data_rhs + self.mu * (
                 grad_x_adjoint(zx - ux) + grad_y_adjoint(zy - uy)
             )
             x = self._solve_x(
@@ -91,7 +91,7 @@ class ADMM(nn.Module):
             * torch.fft.fft2(x, dim=(-2, -1)),
             dim=(-2, -1),
         ).real
-        return data + tv
+        return data + tv + self.eps * x
 
     def _solve_x(
         self, rhs, psf_fft, measurement_mask, dx_fft, dy_fft, x0=None
