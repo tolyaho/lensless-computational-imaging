@@ -5,6 +5,7 @@ from pathlib import Path
 import hydra
 import torch
 from hydra.utils import instantiate, to_absolute_path
+from tqdm.auto import tqdm
 
 from src.utils.image_io import load_image
 
@@ -61,7 +62,7 @@ def main(config):
     metrics = build_metrics(config)
     values = {name: [] for name in metrics.keys()}
 
-    for image_id in image_ids:
+    for image_id in tqdm(image_ids, desc="metrics"):
         pred, target = load_pair(pred_files[image_id], target_files[image_id], device)
 
         batch = {
