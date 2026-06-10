@@ -12,7 +12,6 @@ def get_comet_credentials(
     project_name: str | None = None,
     workspace: str | None = None,
 ) -> CometCredentials:
-    """read comet creds from env first, then optional private_tokens.py."""
     api_key = os.environ.get("COMET_API_KEY") or None
     resolved_project = project_name or os.environ.get("COMET_PROJECT_NAME") or None
     resolved_workspace = workspace or os.environ.get("COMET_WORKSPACE") or None

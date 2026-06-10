@@ -5,7 +5,6 @@ from src.utils.image_io import load_image, load_mask
 
 
 class CustomDirDataset(BaseDataset):
-    """small folder dataset used by the demo or inference path."""
 
     def __init__(self, root, limit=None, shuffle_index=False, instance_transforms=None):
         self.root = Path(root)

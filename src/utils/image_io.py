@@ -6,7 +6,6 @@ from PIL import Image
 
 
 def image_to_tensor(img: Image.Image) -> torch.Tensor:
-    """convert a pil image to float tensor in [0, 1]."""
     img = img.convert("RGB")
     arr = np.array(img)
     x = torch.from_numpy(arr).float() / 255.0
@@ -15,7 +14,6 @@ def image_to_tensor(img: Image.Image) -> torch.Tensor:
 
 
 def load_image(path: str | Path) -> torch.Tensor:
-    """load an image file as float tensor in [0, 1]."""
     path = Path(path)
 
     with Image.open(path) as img:
@@ -23,7 +21,6 @@ def load_image(path: str | Path) -> torch.Tensor:
 
 
 def save_image(tensor: torch.Tensor, path: str | Path) -> None:
-    """save tensor as png."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -52,7 +49,6 @@ def save_image(tensor: torch.Tensor, path: str | Path) -> None:
 
 
 def load_mask(path: str | Path) -> torch.Tensor:
-    """load mask as float tensor."""
     path = Path(path)
 
     arr = np.load(path)

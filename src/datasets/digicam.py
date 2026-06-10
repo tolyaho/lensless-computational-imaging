@@ -10,7 +10,6 @@ DEFAULT_DATASET_NAME = "bezzam/DigiCam-Mirflickr-MultiMask-10K"
 
 
 class DigiCamDataset(BaseDataset):
-    """huggingface digicam train or test split."""
 
     def __init__(
         self,

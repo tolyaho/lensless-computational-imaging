@@ -7,7 +7,6 @@ from src.utils.comet_credentials import get_comet_credentials
 
 
 class CometMLWriter:
-    """comet writer used from train.py."""
 
     def __init__(
         self,

@@ -2,7 +2,6 @@ from torch import nn
 
 
 class ModularLeADMM(nn.Module):
-    """leadmm-5 with optional pre/post cnns."""
 
     def __init__(self, variant="prepost", num_iters=5, *args, **kwargs):
         super().__init__()
