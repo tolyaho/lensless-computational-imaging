@@ -2,3 +2,34 @@ gt_dir: null
 pred_dir: null
 device: auto
 match_by: image_id
+
+output_path: null
+
+metrics:
+  PSNR:
+    _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.PeakSignalNoiseRatio
+      data_range: 1.0
+    device: ${device}
+    name: PSNR
+  SSIM:
+    _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.StructuralSimilarityIndexMeasure
+      data_range: 1.0
+    device: ${device}
+    name: SSIM
+  MSE:
+    _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.regression.MeanSquaredError
+    device: ${device}
+    name: MSE
+  LPIPS:
+    _target_: src.metrics.LPIPSMetric
+    metric:
+      _target_: lpips.LPIPS
+      net: vgg
+    device: ${device}
+    name: LPIPS

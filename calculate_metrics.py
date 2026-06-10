@@ -12,13 +12,19 @@ from src.utils.image_io import load_image
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-def image_files(root):
-    root = Path(root)
+def require_dir(path, name):
+    if path is None:
+        raise ValueError(f"{name} is required")
+    path = Path(to_absolute_path(path))
+    if not path.is_dir():
+        raise FileNotFoundError(f"missing {name} directory: {path}")
+    return path
 
+
+def image_files(root):
     files = []
     for ext in ("*.png", "*.jpg", "*.jpeg"):
         files.extend(root.glob(ext))
-
     return {path.stem: path for path in sorted(files)}
 
 
@@ -35,6 +41,22 @@ def build_metrics(config):
     }
 
 
+def match_image_ids(pred_files, gt_files, match_by):
+    if match_by != "image_id":
+        raise ValueError(f"unsupported match_by: {match_by}")
+
+    pred_only = sorted(set(pred_files) - set(gt_files))
+    gt_only = sorted(set(gt_files) - set(pred_files))
+    if pred_only:
+        print(f"warning: {len(pred_only)} predictions without ground truth, skipped")
+    if gt_only:
+        print(
+            f"warning: {len(gt_only)} ground truth images without predictions, skipped"
+        )
+
+    return sorted(set(pred_files.keys()) & set(gt_files.keys()))
+
+
 @hydra.main(version_base=None, config_path="src/configs", config_name="metrics")
 def main(config):
     device = config.get("device", "auto")
@@ -49,10 +71,13 @@ def main(config):
     device = torch.device(device)
     print(f"using device: {device}")
 
-    pred_files = image_files(to_absolute_path(config.pred_dir))
-    target_files = image_files(to_absolute_path(config.target_dir))
+    pred_dir = require_dir(config.pred_dir, "pred_dir")
+    gt_dir = require_dir(config.gt_dir, "gt_dir")
 
-    image_ids = sorted(set(pred_files.keys()) & set(target_files.keys()))
+    pred_files = image_files(pred_dir)
+    gt_files = image_files(gt_dir)
+
+    image_ids = match_image_ids(pred_files, gt_files, config.match_by)
 
     if not image_ids:
         raise RuntimeError("no matching image ids found")
@@ -63,7 +88,7 @@ def main(config):
     values = {name: [] for name in metrics.keys()}
 
     for image_id in tqdm(image_ids, desc="metrics"):
-        pred, target = load_pair(pred_files[image_id], target_files[image_id], device)
+        pred, target = load_pair(pred_files[image_id], gt_files[image_id], device)
 
         batch = {
             "recon": pred,
@@ -71,14 +96,14 @@ def main(config):
         }
 
         for name, metric in metrics.items():
-            value = metric(**batch)
-            values[name].append(value)
+            values[name].append(metric(**batch))
 
     results = {name: sum(vals) / len(vals) for name, vals in values.items()}
     results["num_images"] = len(image_ids)
 
-    for name, value in results.items():
-        print(f"{name}: {value}")
+    for name in metrics.keys():
+        print(f"{name}: {results[name]}")
+    print(f"num_images: {results['num_images']}")
 
     output_path = config.get("output_path")
     if output_path is not None:
