@@ -1,15 +1,18 @@
-defaults:
-  - model: admm100
-  - metrics: image_metrics
-  - datasets: custom_dir
-  - dataloader: default
-  - transforms: image
-  - _self_
+device: auto
+batch_size: 1
+num_workers: 0
+output_dir: outputs/admm_test
 
-inferencer:
-  device_tensors: ["lensless", "mask", "lensed"]
-  device: auto
-  save_path: reconstructions
-  output_dir: outputs
-  seed: 1
-  from_pretrained: null
+dataset:
+  _target_: src.datasets.custom_dir.CustomDirDataset
+  root: data/custom
+  limit: null
+  shuffle_index: false
+
+model:
+  _target_: src.model.admm.ADMM
+  num_iters: 2
+  cg_iters: 2
+  mu: 1e-4
+  tau: 2e-4
+  clamp_output: true
