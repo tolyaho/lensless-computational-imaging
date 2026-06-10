@@ -1,0 +1,22 @@
+defaults:
+  - model: leadmm20
+  - writer: cometml
+  - metrics: image_metrics
+  - datasets: digicam
+  - dataloader: default
+  - transforms: image
+  - trainer: default
+  - _self_
+
+loss_function:
+  _target_: src.loss.ReconstructionLoss
+  lpips_weight: 0.1
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 1.0e-4
+
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.StepLR
+  gamma: 0.9
+  step_size: ${trainer.epoch_len}

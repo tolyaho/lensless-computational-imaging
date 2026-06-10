@@ -1,0 +1,4 @@
+_target_: src.model.ADMM
+num_iters: 100
+mu: 1.0e-4
+tau: 2.0e-4

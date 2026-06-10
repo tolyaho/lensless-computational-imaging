@@ -1,0 +1,15 @@
+defaults:
+  - model: admm100
+  - metrics: image_metrics
+  - datasets: custom_dir
+  - dataloader: default
+  - transforms: image
+  - _self_
+
+inferencer:
+  device_tensors: ["lensless", "mask", "lensed"]
+  device: auto
+  save_path: reconstructions
+  output_dir: outputs
+  seed: 1
+  from_pretrained: null

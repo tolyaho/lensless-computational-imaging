@@ -1,0 +1,11 @@
+defaults:
+  - model: admm100
+  - datasets: custom_dir
+  - dataloader: default
+  - _self_
+
+device: auto
+checkpoint_path: null
+num_warmup: 5
+num_runs: 100
+batch_size: 1

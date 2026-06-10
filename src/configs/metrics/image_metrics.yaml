@@ -1,0 +1,32 @@
+device: auto
+train:
+  - _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.PeakSignalNoiseRatio
+      data_range: 1.0
+    device: ${metrics.device}
+    name: PSNR
+inference:
+  - _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.PeakSignalNoiseRatio
+      data_range: 1.0
+    device: ${metrics.device}
+    name: PSNR
+  - _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.StructuralSimilarityIndexMeasure
+      data_range: 1.0
+    device: ${metrics.device}
+    name: SSIM
+  - _target_: src.metrics.ImageMetrics
+    metric:
+      _target_: torchmetrics.image.MeanSquaredError
+    device: ${metrics.device}
+    name: MSE
+  - _target_: src.metrics.LPIPSMetric
+    metric:
+      _target_: lpips.LPIPS
+      net: vgg
+    device: ${metrics.device}
+    name: LPIPS

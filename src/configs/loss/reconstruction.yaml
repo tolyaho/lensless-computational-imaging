@@ -1,0 +1,2 @@
+_target_: src.loss.ReconstructionLoss
+lpips_weight: 0.1

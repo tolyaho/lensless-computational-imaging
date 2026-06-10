@@ -1,0 +1,4 @@
+test:
+  _target_: src.datasets.CustomDirDataset
+  root: null
+  instance_transforms: ${transforms.instance_transforms.inference}

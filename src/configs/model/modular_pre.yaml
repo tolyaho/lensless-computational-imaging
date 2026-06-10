@@ -1,0 +1,3 @@
+_target_: src.model.ModularLeADMM
+variant: pre
+num_iters: 5

@@ -1,0 +1,4 @@
+gt_dir: null
+pred_dir: null
+device: auto
+match_by: image_id
