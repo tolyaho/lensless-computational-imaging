@@ -1,0 +1,7 @@
+rank,method,hydra_model,checkpoint,params,psnr,ssim,mse,lpips,split,n_images,notes
+1,LeADMM-5 + DRUNet pre+post,modular_leadmm5_prepost_drunet8m,checkpoints/leadmm5_prepost_drunet8m.pth,8512016,17.3128,0.4446,0.0232,0.5766,test,1500,
+2,LeADMM-5 + DRUNet post,modular_leadmm5_post_drunet8m,checkpoints/leadmm5_post_drunet8m.pth,8337293,16.6853,0.4224,0.0263,0.5965,test,1500,
+3,FlatNet-lite,flatnet_lite,checkpoints/flatnet_lite.pth,2725132,16.121,0.3801,0.0293,0.6056,test,1500,bonus
+4,LeADMM-5 + DRUNet pre,modular_leadmm5_pre_drunet8m,checkpoints/leadmm5_pre_drunet8m.pth,8337293,15.2942,0.3104,0.0348,0.6859,test,1500,
+5,ADMM-100 + bg sub,ADMM,,0,10.5661,0.2411,0.1133,0.8203,test,1500,
+6,LeADMM-20,UnrolledADMM,checkpoints/leadmm20.pth,40,8.1522,0.2378,0.16,0.7659,test,1500,

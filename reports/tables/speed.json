@@ -1,0 +1,56 @@
+[
+  {
+    "method": "ADMM-100 + bg sub",
+    "model": "ADMM",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 52.5051,
+    "seconds_per_image": 1.050103,
+    "images_per_second": 0.952288
+  },
+  {
+    "method": "LeADMM-20",
+    "model": "UnrolledADMM",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 10.4645,
+    "seconds_per_image": 0.20929,
+    "images_per_second": 4.778048
+  },
+  {
+    "method": "LeADMM-5 + DRUNet pre",
+    "model": "modular_leadmm5_pre_drunet8m",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 3.1318,
+    "seconds_per_image": 0.062636,
+    "images_per_second": 15.965308
+  },
+  {
+    "method": "LeADMM-5 + DRUNet post",
+    "model": "modular_leadmm5_post_drunet8m",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 3.1422,
+    "seconds_per_image": 0.062845,
+    "images_per_second": 15.912274
+  },
+  {
+    "method": "LeADMM-5 + DRUNet pre+post",
+    "model": "modular_leadmm5_prepost_drunet8m",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 3.2667,
+    "seconds_per_image": 0.065334,
+    "images_per_second": 15.305991
+  },
+  {
+    "method": "FlatNet-lite",
+    "model": "flatnet_lite",
+    "num_images": 50,
+    "device": "cuda",
+    "seconds_total": 0.2414,
+    "seconds_per_image": 0.004828,
+    "images_per_second": 207.122517
+  }
+]

@@ -15,6 +15,13 @@ python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into dat
 
 Dataset pulls from HuggingFace on first run. For Comet logging during training, I put my API key in `private_tokens.py` (gitignored).
 
+```bash
+python download_checkpoints.py --name leadmm5_prepost_drunet8m.pth   # demo / best model
+python download_checkpoints.py --all                               # all report checkpoints
+```
+
+Checkpoints live on HF: `tolyho/lensless-computational-imaging-checkpoints`.
+
 ## Inference
 
 Default `-cn inference` is fixed ADMM-100 + background subtraction (no checkpoint).

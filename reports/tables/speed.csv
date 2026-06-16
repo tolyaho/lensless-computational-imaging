@@ -1,0 +1,7 @@
+method,model,num_images,device,seconds_total,seconds_per_image,images_per_second
+ADMM-100 + bg sub,ADMM,50,cuda,52.5051,1.050103,0.952288
+LeADMM-20,UnrolledADMM,50,cuda,10.4645,0.20929,4.778048
+LeADMM-5 + DRUNet pre,modular_leadmm5_pre_drunet8m,50,cuda,3.1318,0.062636,15.965308
+LeADMM-5 + DRUNet post,modular_leadmm5_post_drunet8m,50,cuda,3.1422,0.062845,15.912274
+LeADMM-5 + DRUNet pre+post,modular_leadmm5_prepost_drunet8m,50,cuda,3.2667,0.065334,15.305991
+FlatNet-lite,flatnet_lite,50,cuda,0.2414,0.004828,207.122517
