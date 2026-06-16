@@ -25,3 +25,5 @@ docs/
 .vscode/
 .idea/
 .DS_Store
+
+tests/

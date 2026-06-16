@@ -1,10 +1,6 @@
-model:
-  _target_: src.model.ADMM
-  num_iters: 100
-  cg_iters: 10
-  mu: 1.0e-4
-  tau: 2.0e-4
-  clamp_output: true
+defaults:
+  - model: modular_leadmm5_prepost_drunet8m
+  - _self_
 
 dataset:
   _target_: src.datasets.custom_dir.CustomDirDataset
@@ -15,6 +11,6 @@ dataset:
 device: auto
 batch_size: 1
 num_workers: 0
-output_dir: outputs/custom_admm100
-save_targets: false
-checkpoint: null
+output_dir: outputs/custom_inference
+save_targets: true
+checkpoint: checkpoints/leadmm5_prepost_drunet8m.pth
