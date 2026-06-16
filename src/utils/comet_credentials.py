@@ -8,29 +8,37 @@ class CometCredentials(NamedTuple):
     workspace: str | None
 
 
+def _load_private_tokens():
+    try:
+        import private_tokens
+    except ImportError:
+        return None
+    return private_tokens
+
+
 def get_comet_credentials(
     project_name: str | None = None,
     workspace: str | None = None,
 ) -> CometCredentials:
-    api_key = os.environ.get("COMET_API_KEY") or None
-    resolved_project = project_name or os.environ.get("COMET_PROJECT_NAME") or None
-    resolved_workspace = workspace or os.environ.get("COMET_WORKSPACE") or None
+    tokens = _load_private_tokens()
+
+    api_key = None
+    resolved_project = project_name
+    resolved_workspace = workspace
+
+    if tokens is not None:
+        api_key = getattr(tokens, "COMET_API_KEY", None) or None
+        if not resolved_project:
+            resolved_project = getattr(tokens, "COMET_PROJECT_NAME", None) or None
+        if not resolved_workspace:
+            resolved_workspace = getattr(tokens, "COMET_WORKSPACE", None) or None
 
     if not api_key:
-        try:
-            import private_tokens
-
-            api_key = getattr(private_tokens, "COMET_API_KEY", None) or None
-            if not resolved_project:
-                resolved_project = (
-                    getattr(private_tokens, "COMET_PROJECT_NAME", None) or None
-                )
-            if not resolved_workspace:
-                resolved_workspace = (
-                    getattr(private_tokens, "COMET_WORKSPACE", None) or None
-                )
-        except ImportError:
-            pass
+        api_key = os.environ.get("COMET_API_KEY") or None
+    if not resolved_project:
+        resolved_project = os.environ.get("COMET_PROJECT_NAME") or None
+    if not resolved_workspace:
+        resolved_workspace = os.environ.get("COMET_WORKSPACE") or None
 
     return CometCredentials(
         api_key=api_key,

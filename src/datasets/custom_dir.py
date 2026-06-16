@@ -1,7 +1,11 @@
 from pathlib import Path
 
+import numpy as np
+
 from src.datasets.base_dataset import BaseDataset
-from src.utils.image_io import load_image, load_mask
+from src.utils.digicam_preprocess import align_lensed, rotate_lensless
+from src.utils.image_io import load_image
+from src.utils.psf import mask_vals_to_psf
 
 
 class CustomDirDataset(BaseDataset):
@@ -52,14 +56,17 @@ class CustomDirDataset(BaseDataset):
     def __getitem__(self, index):
         item = self._index[index]
 
+        lensless = rotate_lensless(load_image(item["lensless"]))
+        mask = mask_vals_to_psf(np.load(item["mask"]))
+
         sample = {
             "image_id": item["image_id"],
-            "lensless": load_image(item["lensless"]),
-            "mask": load_mask(item["mask"]),
+            "lensless": lensless,
+            "mask": mask,
         }
 
         if "lensed" in item:
-            sample["lensed"] = load_image(item["lensed"])
+            sample["lensed"] = align_lensed(load_image(item["lensed"]), lensless.shape[-2:])
 
         return self.preprocess_data(sample)
 

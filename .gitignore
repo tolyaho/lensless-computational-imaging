@@ -1,19 +1,22 @@
 __pycache__/
 *.py[cod]
+.pytest_cache/
 .venv/
 venv/
 
 .env
 private_tokens.py
-!private_tokens.example.py
 
 data/
 saved/
 outputs/
+diagnostics/
 checkpoints/
 *.pt
 *.pth
 .cometml-runs/
+wandb/
+*.log
 
 docs/
 .ipynb_checkpoints

@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import numpy as np
 from datasets import load_dataset
 from PIL import Image
 
 from src.datasets.base_dataset import BaseDataset
-from src.utils.image_io import image_to_tensor, load_mask
+from src.utils.digicam_preprocess import align_lensed, rotate_lensless
+from src.utils.image_io import image_to_tensor
+from src.utils.psf import mask_vals_to_psf
 
 DEFAULT_DATASET_NAME = "bezzam/DigiCam-Mirflickr-MultiMask-10K"
 
@@ -32,7 +35,7 @@ class DigiCamDataset(BaseDataset):
 
         self.require_lensed = require_lensed
         self.hf_dataset = load_dataset(dataset_name, split=split)
-        self._mask_cache = {}
+        self._psf_cache = {}
 
         index = []
         for idx in range(len(self.hf_dataset)):
@@ -45,14 +48,15 @@ class DigiCamDataset(BaseDataset):
             instance_transforms=instance_transforms,
         )
 
-    def _load_mask_by_label(self, mask_label):
+    def _build_psf(self, mask_label):
         label = int(mask_label)
-        if label not in self._mask_cache:
+        if label not in self._psf_cache:
             mask_path = self.masks_root / f"mask_{label}.npy"
             if not mask_path.exists():
                 raise FileNotFoundError(f"missing mask file for label {label}: {mask_path}")
-            self._mask_cache[label] = load_mask(mask_path)
-        return self._mask_cache[label]
+            mask_vals = np.load(mask_path)
+            self._psf_cache[label] = mask_vals_to_psf(mask_vals)
+        return self._psf_cache[label]
 
     @staticmethod
     def _row_image(row, field):
@@ -67,15 +71,21 @@ class DigiCamDataset(BaseDataset):
         item = self._index[index]
         row = self.hf_dataset[item["idx"]]
 
+        lensless = rotate_lensless(image_to_tensor(self._row_image(row, "lensless")))
+        mask = self._build_psf(row["mask_label"])
+
         sample = {
             "image_id": item["image_id"],
-            "lensless": image_to_tensor(self._row_image(row, "lensless")),
-            "mask": self._load_mask_by_label(row["mask_label"]).clone(),
+            "lensless": lensless,
+            "mask": mask,
         }
 
         lensed = row.get("lensed")
         if lensed is not None:
-            sample["lensed"] = image_to_tensor(self._row_image(row, "lensed"))
+            sample["lensed"] = align_lensed(
+                image_to_tensor(self._row_image(row, "lensed")),
+                lensless.shape[-2:],
+            )
         elif self.require_lensed:
             raise FileNotFoundError(f"missing lensed image for {item['image_id']}")
 

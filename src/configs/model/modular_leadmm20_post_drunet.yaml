@@ -1,0 +1,21 @@
+# @package model
+# LeADMM20 + Post
+_target_: src.model.modular_admm.ModularADMM
+
+admm_core:
+  _target_: src.model.unrolled_admm.UnrolledADMM
+  num_iters: 20
+  init_mu: 1e-4
+  init_tau: 2e-4
+  eps: 1e-6
+  cg_iters: 10
+  clamp_output: false
+
+pre_processor: null
+
+post_processor:
+  _target_: src.model.drunet.DRUNetProcessor
+  channels: 3
+  features: [32, 64, 128, 256]
+  residual_scale: 0.1
+  clamp_output: false

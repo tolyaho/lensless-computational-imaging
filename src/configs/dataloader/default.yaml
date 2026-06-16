@@ -1,4 +1,0 @@
-_target_: torch.utils.data.DataLoader
-batch_size: 4
-num_workers: 2
-pin_memory: true

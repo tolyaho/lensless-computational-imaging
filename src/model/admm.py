@@ -1,14 +1,17 @@
 import torch
 from torch import nn
 
+from src.utils.background import subtract_background
 from src.utils.fft import fft_convolve, fft_convolve_adjoint, prepare_psf
 from src.utils.padding import center_crop, center_pad, padded_shape
 from src.utils.tv import (
+    circular_grad_ffts,
     grad_x,
     grad_x_adjoint,
     grad_y,
     grad_y_adjoint,
     soft_threshold,
+    tv_squared_adjoint,
 )
 
 
@@ -22,6 +25,8 @@ class ADMM(nn.Module):
         eps=1e-6,
         cg_iters=10,
         clamp_output=True,
+        subtract_background=False,
+        background_quantile=0.6,
     ):
         super().__init__()
         self.num_iters = num_iters
@@ -30,9 +35,12 @@ class ADMM(nn.Module):
         self.eps = eps
         self.cg_iters = cg_iters
         self.clamp_output = clamp_output
+        self.subtract_background = subtract_background
+        self.background_quantile = background_quantile
 
     def forward(self, lensless: torch.Tensor, mask: torch.Tensor, **batch):
         h, w = lensless.shape[-2], lensless.shape[-1]
+        out_shape = (h, w)
         pad_shape = padded_shape(h, w)
 
         y = center_pad(lensless, pad_shape)
@@ -43,7 +51,7 @@ class ADMM(nn.Module):
         psf_fft = prepare_psf(mask, pad_shape).to(
             device=y.device, dtype=torch.complex64
         )
-        dx_fft, dy_fft = self._grad_ffts(
+        dx_fft, dy_fft = circular_grad_ffts(
             pad_shape,
             device=y.device,
             dtype=y.dtype,
@@ -62,9 +70,7 @@ class ADMM(nn.Module):
             rhs = data_rhs + self.mu * (
                 grad_x_adjoint(zx - ux) + grad_y_adjoint(zy - uy)
             )
-            x = self._solve_x(
-                rhs, psf_fft, measurement_mask, dx_fft, dy_fft, x0=x
-            )
+            x = self._solve_x(rhs, psf_fft, measurement_mask, dx_fft, dy_fft, x0=x)
 
             gx = grad_x(x)
             gy = grad_y(x)
@@ -75,27 +81,24 @@ class ADMM(nn.Module):
             ux = ux + gx - zx
             uy = uy + gy - zy
 
-        x = center_crop(x, (h, w))
+        x = center_crop(x, out_shape)
 
+        # clamp before bg-sub so ringing saturates first.
         if self.clamp_output:
             x = x.clamp(0, 1)
+
+        if self.subtract_background:
+            x = subtract_background(x, self.background_quantile)
 
         return {"recon": x}
 
     def _normal_op(self, x, psf_fft, measurement_mask, dx_fft, dy_fft):
         hx = fft_convolve(x, psf_fft)
         data = fft_convolve_adjoint(measurement_mask * hx, psf_fft)
-        tv = torch.fft.ifft2(
-            self.mu
-            * (dx_fft.abs().square() + dy_fft.abs().square())
-            * torch.fft.fft2(x, dim=(-2, -1)),
-            dim=(-2, -1),
-        ).real
+        tv = self.mu * tv_squared_adjoint(x, dx_fft, dy_fft)
         return data + tv + self.eps * x
 
-    def _solve_x(
-        self, rhs, psf_fft, measurement_mask, dx_fft, dy_fft, x0=None
-    ):
+    def _solve_x(self, rhs, psf_fft, measurement_mask, dx_fft, dy_fft, x0=None):
         if x0 is None:
             x = torch.zeros_like(rhs)
         else:
@@ -126,21 +129,3 @@ class ADMM(nn.Module):
     def _dot(a, b):
         dims = tuple(range(1, a.ndim))
         return (a * b).sum(dim=dims, keepdim=True)
-
-    @staticmethod
-    def _grad_ffts(shape, device, dtype):
-        h, w = shape
-
-        kx = torch.zeros(1, 1, h, w, device=device, dtype=dtype)
-        ky = torch.zeros(1, 1, h, w, device=device, dtype=dtype)
-
-        kx[..., 0, 0] = -1
-        kx[..., 0, -1] = 1
-
-        ky[..., 0, 0] = -1
-        ky[..., -1, 0] = 1
-
-        dx_fft = torch.fft.fft2(kx, dim=(-2, -1))
-        dy_fft = torch.fft.fft2(ky, dim=(-2, -1))
-
-        return dx_fft, dy_fft

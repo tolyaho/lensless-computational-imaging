@@ -1,8 +1,19 @@
-defaults:
-  - model: admm100
-  - datasets: custom_dir
-  - dataloader: default
-  - _self_
+model:
+  _target_: src.model.ADMM
+  num_iters: 100
+  cg_iters: 10
+  mu: 1.0e-4
+  tau: 2.0e-4
+  clamp_output: true
+
+dataset:
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: test
+  masks_root: data/digicam_masks
+  require_lensed: true
+  limit: 10
+  shuffle_index: false
 
 device: auto
 checkpoint_path: null

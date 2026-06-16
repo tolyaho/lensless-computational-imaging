@@ -1,0 +1,6 @@
+# @package writer
+_target_: src.logger.noop.NoOpWriter
+run_name: train_smoke
+loss_names: ["loss", "mse_loss", "lpips_loss"]
+log_checkpoints: false
+id_length: 32

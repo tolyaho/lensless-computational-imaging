@@ -65,7 +65,7 @@ class BaseTrainer:
             if self.early_stop <= 0:
                 self.early_stop = inf
         self.writer = writer
-        self.metrics = metrics
+        self.metrics = self._normalize_metrics(metrics)
         self.train_metrics = MetricTracker(
             *self.config.writer.loss_names,
             "grad_norm",
@@ -80,11 +80,28 @@ class BaseTrainer:
         self.checkpoint_dir = (
             ROOT_PATH / config.trainer.save_dir / config.writer.run_name
         )
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         if config.trainer.get("resume_from") is not None:
             resume_path = self.checkpoint_dir / config.trainer.resume_from
             self._resume_checkpoint(resume_path)
         if config.trainer.get("from_pretrained") is not None:
             self._from_pretrained(config.trainer.get("from_pretrained"))
+
+    @staticmethod
+    def _normalize_metrics(metrics):
+        if metrics is None:
+            return {"train": [], "inference": []}
+        train = metrics.get("train") if hasattr(metrics, "get") else None
+        inference = metrics.get("inference") if hasattr(metrics, "get") else None
+        return {
+            "train": [] if train is None else list(train),
+            "inference": [] if inference is None else list(inference),
+        }
+
+    def _current_lr(self):
+        if self.lr_scheduler is not None:
+            return self.lr_scheduler.get_last_lr()[0]
+        return self.optimizer.param_groups[0]["lr"]
 
     def train(self):
         try:
@@ -117,35 +134,35 @@ class BaseTrainer:
         self.train_metrics.reset()
         self.writer.set_step((epoch - 1) * self.epoch_len)
         self.writer.add_scalar("epoch", epoch)
-        for batch_idx, batch in enumerate(
-            tqdm(self.train_dataloader, desc="train", total=self.epoch_len)
-        ):
+        last_train_metrics = {}
+        pbar = tqdm(
+            self.train_dataloader,
+            desc=f"epoch {epoch}",
+            total=self.epoch_len,
+            dynamic_ncols=True,
+        )
+        for batch_idx, batch in enumerate(pbar):
             try:
                 batch = self.process_batch(batch, metrics=self.train_metrics)
             except torch.cuda.OutOfMemoryError as e:
                 if self.skip_oom:
-                    self.logger.warning("OOM on batch. Skipping batch.")
+                    pbar.write("OOM on batch. Skipping batch.")
                     torch.cuda.empty_cache()
                     continue
                 else:
                     raise e
             self.train_metrics.update("grad_norm", self._get_grad_norm())
+            pbar.set_postfix(loss=f"{batch['loss'].item():.4f}", refresh=False)
             if batch_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.epoch_len + batch_idx)
-                self.logger.debug(
-                    "Train Epoch: {} {} Loss: {:.6f}".format(
-                        epoch, self._progress(batch_idx), batch["loss"].item()
-                    )
-                )
-                self.writer.add_scalar(
-                    "learning rate", self.lr_scheduler.get_last_lr()[0]
-                )
+                self.writer.add_scalar("learning rate", self._current_lr())
                 self._log_scalars(self.train_metrics)
                 self._log_batch(batch_idx, batch)
                 last_train_metrics = self.train_metrics.result()
                 self.train_metrics.reset()
             if batch_idx + 1 >= self.epoch_len:
                 break
+        pbar.close()
         logs = last_train_metrics
         for part, dataloader in self.evaluation_dataloaders.items():
             val_logs = self._evaluation_epoch(epoch, part, dataloader)
@@ -161,9 +178,10 @@ class BaseTrainer:
                 enumerate(dataloader), desc=part, total=len(dataloader)
             ):
                 batch = self.process_batch(batch, metrics=self.evaluation_metrics)
+                if batch_idx == 0:
+                    self._log_batch(batch_idx, batch, part)
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics)
-            self._log_batch(batch_idx, batch, part)
         return self.evaluation_metrics.result()
 
     def _monitor_performance(self, logs, not_improved_count):
@@ -231,16 +249,6 @@ class BaseTrainer:
         )
         return total_norm.item()
 
-    def _progress(self, batch_idx):
-        base = "[{}/{} ({:.0f}%)]"
-        if hasattr(self.train_dataloader, "n_samples"):
-            current = batch_idx * self.train_dataloader.batch_size
-            total = self.train_dataloader.n_samples
-        else:
-            current = batch_idx
-            total = self.epoch_len
-        return base.format(current, total, 100.0 * current / total)
-
     @abstractmethod
     def _log_batch(self, batch_idx, batch, mode="train"):
         return NotImplementedError()
@@ -258,7 +266,11 @@ class BaseTrainer:
             "epoch": epoch,
             "state_dict": self.model.state_dict(),
             "optimizer": self.optimizer.state_dict(),
-            "lr_scheduler": self.lr_scheduler.state_dict(),
+            "lr_scheduler": (
+                self.lr_scheduler.state_dict()
+                if self.lr_scheduler is not None
+                else None
+            ),
             "monitor_best": self.mnt_best,
             "config": self.config,
         }
@@ -295,7 +307,11 @@ class BaseTrainer:
             )
         else:
             self.optimizer.load_state_dict(checkpoint["optimizer"])
-            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            if (
+                self.lr_scheduler is not None
+                and checkpoint.get("lr_scheduler") is not None
+            ):
+                self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         self.logger.info(
             f"Checkpoint loaded. Resume training from epoch {self.start_epoch}"
         )

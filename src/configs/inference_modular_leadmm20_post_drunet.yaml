@@ -1,0 +1,19 @@
+defaults:
+  - model: modular_leadmm20_post_drunet
+  - _self_
+
+dataset:
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: test
+  masks_root: data/digicam_masks
+  require_lensed: true
+  limit: null
+  shuffle_index: false
+
+device: auto
+batch_size: 1
+num_workers: 0
+output_dir: outputs/digicam_leadmm20_drunet_post
+save_targets: true
+checkpoint: null

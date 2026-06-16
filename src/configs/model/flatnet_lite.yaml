@@ -1,0 +1,17 @@
+# @package model
+# FlatNet-lite
+_target_: src.model.flatnet.FlatNetLite
+clamp_output: false
+
+inversion:
+  _target_: src.model.flatnet.LearnedWienerInversion
+  channels: 3
+  init_lambda: 1e-3
+  eps: 1e-6
+
+enhancer:
+  _target_: src.model.drunet.DRUNetProcessor
+  channels: 3
+  features: [32, 64, 128, 256]
+  residual_scale: 0.1
+  clamp_output: false

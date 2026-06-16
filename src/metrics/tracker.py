@@ -1,27 +1,27 @@
-import pandas as pd
-
-
 class MetricTracker:
 
     def __init__(self, *keys, writer=None):
         self.writer = writer
-        self._data = pd.DataFrame(index=keys, columns=["total", "counts", "average"])
-        self.reset()
+        self._keys = list(keys)
+        self._totals = {key: 0.0 for key in self._keys}
+        self._counts = {key: 0 for key in self._keys}
 
     def reset(self):
-        for col in self._data.columns:
-            self._data[col].values[:] = 0
+        for key in self._keys:
+            self._totals[key] = 0.0
+            self._counts[key] = 0
 
     def update(self, key, value, n=1):
-        self._data.loc[key, "total"] += value * n
-        self._data.loc[key, "counts"] += n
-        self._data.loc[key, "average"] = self._data.total[key] / self._data.counts[key]
+        self._totals[key] += float(value) * n
+        self._counts[key] += n
 
     def avg(self, key):
-        return self._data.average[key]
+        if self._counts[key] == 0:
+            return 0.0
+        return self._totals[key] / self._counts[key]
 
     def result(self):
-        return dict(self._data.average)
+        return {key: self.avg(key) for key in self._keys}
 
     def keys(self):
-        return self._data.total.keys()
+        return self._keys

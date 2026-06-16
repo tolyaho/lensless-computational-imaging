@@ -5,12 +5,16 @@ lpips
 numpy==1.26.4
 Pillow
 datasets
+huggingface_hub
 tqdm
 matplotlib
 pandas
 comet_ml
 hydra-core
 omegaconf
+waveprop
+opencv-python
+scipy
 
 black
 isort

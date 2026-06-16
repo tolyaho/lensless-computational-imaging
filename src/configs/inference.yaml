@@ -1,18 +1,25 @@
-device: auto
-batch_size: 1
-num_workers: 0
-output_dir: outputs/admm_test
+model:
+  _target_: src.model.ADMM
+  num_iters: 100
+  cg_iters: 10
+  mu: 1.0e-4
+  tau: 2.0e-4
+  clamp_output: true
+  subtract_background: true
+  background_quantile: 0.6
 
 dataset:
-  _target_: src.datasets.custom_dir.CustomDirDataset
-  root: data/custom
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: test
+  masks_root: data/digicam_masks
+  require_lensed: true
   limit: null
   shuffle_index: false
 
-model:
-  _target_: src.model.admm.ADMM
-  num_iters: 2
-  cg_iters: 2
-  mu: 1e-4
-  tau: 2e-4
-  clamp_output: true
+device: auto
+batch_size: 1
+num_workers: 0
+output_dir: outputs/digicam_simple_admm100
+save_targets: true
+checkpoint: null

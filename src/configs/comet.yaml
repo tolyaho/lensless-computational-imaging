@@ -1,0 +1,9 @@
+# @package writer
+_target_: src.logger.comet_writer.CometWriter
+project_name: lensless-computational-imaging
+workspace: null
+run_name: train_smoke
+mode: online
+loss_names: ["loss", "mse_loss", "lpips_loss"]
+log_checkpoints: true
+id_length: 32

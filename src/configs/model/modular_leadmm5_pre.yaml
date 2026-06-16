@@ -1,0 +1,20 @@
+# @package model
+_target_: src.model.modular_admm.ModularADMM
+
+admm_core:
+  _target_: src.model.unrolled_admm.UnrolledADMM
+  num_iters: 5
+  init_mu: 1e-4
+  init_tau: 2e-4
+  eps: 1e-6
+  cg_iters: 10
+  clamp_output: false
+
+pre_processor:
+  _target_: src.model.processor.ResidualCNNProcessor
+  channels: 3
+  hidden_channels: 32
+  num_layers: 4
+  residual_scale: 0.1
+
+post_processor: null

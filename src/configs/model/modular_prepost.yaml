@@ -1,3 +1,0 @@
-_target_: src.model.ModularLeADMM
-variant: prepost
-num_iters: 5

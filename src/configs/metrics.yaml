@@ -2,12 +2,14 @@ gt_dir: null
 pred_dir: null
 device: auto
 match_by: image_id
+use_roi: true
 
 output_path: null
 
 metrics:
   PSNR:
     _target_: src.metrics.ImageMetrics
+    use_roi: ${use_roi}
     metric:
       _target_: torchmetrics.image.PeakSignalNoiseRatio
       data_range: 1.0
@@ -15,6 +17,7 @@ metrics:
     name: PSNR
   SSIM:
     _target_: src.metrics.ImageMetrics
+    use_roi: ${use_roi}
     metric:
       _target_: torchmetrics.image.StructuralSimilarityIndexMeasure
       data_range: 1.0
@@ -22,12 +25,14 @@ metrics:
     name: SSIM
   MSE:
     _target_: src.metrics.ImageMetrics
+    use_roi: ${use_roi}
     metric:
       _target_: torchmetrics.regression.MeanSquaredError
     device: ${device}
     name: MSE
   LPIPS:
     _target_: src.metrics.LPIPSMetric
+    use_roi: ${use_roi}
     metric:
       _target_: lpips.LPIPS
       net: vgg

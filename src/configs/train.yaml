@@ -1,0 +1,66 @@
+defaults:
+  - model: leadmm20
+  - noop
+  - reconstruction
+  - _self_
+
+trainer:
+  seed: 69
+  device: auto
+  device_tensors: ["lensless", "mask", "lensed"]
+  n_epochs: 1
+  save_period: 1
+  save_dir: outputs/train_smoke
+  monitor: "off"
+  early_stop: 10
+  log_step: 1
+  max_grad_norm: 1.0
+  epoch_len: null
+  skip_oom: true
+  override: true
+
+loss:
+  _target_: src.loss.reconstruction_loss.ReconstructionLoss
+  mse_weight: 1.0
+  lpips_weight: 0.1
+  use_roi: true
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 1e-4
+
+lr_scheduler: null
+
+transforms:
+  batch_transforms:
+    train: null
+    inference: null
+  instance_transforms:
+    train: null
+    inference: null
+
+datasets:
+  train:
+    _target_: src.datasets.digicam.DigiCamDataset
+    dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+    split: train
+    masks_root: data/digicam_masks
+    require_lensed: true
+    limit: 20
+    shuffle_index: true
+    instance_transforms: null
+  val:
+    _target_: src.datasets.digicam.DigiCamDataset
+    dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+    split: test
+    masks_root: data/digicam_masks
+    require_lensed: true
+    limit: 5
+    shuffle_index: false
+    instance_transforms: null
+
+dataloader:
+  _target_: torch.utils.data.DataLoader
+  batch_size: 1
+  num_workers: 0
+  pin_memory: false

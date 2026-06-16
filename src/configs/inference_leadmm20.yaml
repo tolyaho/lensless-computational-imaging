@@ -1,0 +1,24 @@
+model:
+  _target_: src.model.unrolled_admm.UnrolledADMM
+  num_iters: 20
+  init_mu: 1e-4
+  init_tau: 2e-4
+  eps: 1e-6
+  cg_iters: 10
+  clamp_output: true
+
+dataset:
+  _target_: src.datasets.digicam.DigiCamDataset
+  dataset_name: bezzam/DigiCam-Mirflickr-MultiMask-10K
+  split: test
+  masks_root: data/digicam_masks
+  require_lensed: true
+  limit: null
+  shuffle_index: false
+
+device: auto
+batch_size: 1
+num_workers: 0
+output_dir: outputs/digicam_leadmm20
+save_targets: true
+checkpoint: null

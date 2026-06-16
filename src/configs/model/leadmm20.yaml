@@ -1,2 +1,8 @@
-_target_: src.model.UnrolledADMM
-num_iters: 20
+# @package model
+_target_: src.model.unrolled_admm.UnrolledADMM
+num_iters: 2
+init_mu: 1e-4
+init_tau: 2e-4
+eps: 1e-6
+cg_iters: 2
+clamp_output: false
