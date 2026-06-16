@@ -128,10 +128,6 @@ def assign_ranks(rows: list[dict]) -> list[dict]:
     return rows
 
 
-def write_json(path: Path, rows: list[dict]) -> None:
-    path.write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
-
-
 def write_csv(path: Path, rows: list[dict]) -> None:
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
@@ -188,13 +184,8 @@ def main() -> int:
 
     rows = assign_ranks(rows)
 
-    json_path = TABLES_DIR / "final_metrics.json"
     csv_path = TABLES_DIR / "final_metrics.csv"
-
-    write_json(json_path, rows)
     write_csv(csv_path, rows)
-
-    print(f"wrote {json_path}")
     print(f"wrote {csv_path}")
     print_table(rows)
 
