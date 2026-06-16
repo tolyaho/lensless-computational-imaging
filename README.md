@@ -1,5 +1,9 @@
 # Lensless Computational Imaging
 
+DigiCam lensless reconstruction homework. I implemented ADMM-100, LeADMM-20, and modular LeADMM-5 + DRUNet (pre / post / pre+post). Best test result I got: **17.31 dB PSNR** with pre+post DRUNet (`outputs/final_leadmm5_drunet8m_prepost`). Also added **FlatNet-lite** as a bonus — learned Wiener inversion + DRUNet.
+
+Configs live in `src/configs/`. Metrics use ROI crop `[80:280, 100:366]`.
+
 ## Setup
 
 ```bash
@@ -9,7 +13,11 @@ pip install -r requirements.txt
 python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into data/digicam_masks/
 ```
 
+Dataset pulls from HuggingFace on first run. For Comet logging during training, I put my API key in `private_tokens.py` (gitignored).
+
 ## Inference
+
+Default `-cn inference` is fixed ADMM-100 + background subtraction (no checkpoint).
 
 ```bash
 .venv/bin/python inference.py -cn inference
@@ -26,6 +34,8 @@ python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into dat
 
 ## Metrics
 
+Compare `recon/` vs `lensed/` from an inference run:
+
 ```bash
 .venv/bin/python calculate_metrics.py \
   pred_dir=outputs/digicam_simple_admm100/recon \
@@ -34,6 +44,8 @@ python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into dat
 ```
 
 ## Training
+
+Example: train LeADMM-20. I logged runs to Comet via `-cn train_comet`.
 
 ```bash
 .venv/bin/python train.py -cn train_comet \
@@ -49,6 +61,8 @@ python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into dat
 
 ## Modular Models
 
+LeADMM-5 unrolled core with DRUNet before/after. Pre+post worked best for me.
+
 ```bash
 .venv/bin/python train.py -cn train_comet \
   model=modular_leadmm5_prepost_drunet8m \
@@ -59,22 +73,36 @@ python scripts/download_digicam_masks.py   # mask_0.npy … mask_99.npy into dat
 
 ## FlatNet-Lite
 
+Bonus baseline: I learn only Wiener λ/scale/bias, then DRUNet cleans up. Debug run first, then full training:
+
 ```bash
+# debug
 .venv/bin/python train.py -cn train_comet \
   model=flatnet_lite \
-  datasets.train.limit=20 \
-  datasets.val.limit=5 \
-  trainer.n_epochs=1 \
-  optimizer.lr=1e-4 \
+  datasets.train.limit=20 datasets.val.limit=5 \
+  trainer.n_epochs=1 optimizer.lr=1e-4 \
   trainer.save_dir=outputs/train_flatnet_lite_debug \
   writer.run_name=flatnet_lite_debug
 
+# full (10 epochs)
+.venv/bin/python train.py -cn train_comet \
+  model=flatnet_lite \
+  datasets.train.limit=null datasets.val.limit=null \
+  trainer.n_epochs=10 optimizer.lr=1e-4 \
+  trainer.save_dir=outputs/train_flatnet_lite \
+  writer.run_name=flatnet_lite
+
+# follow training log
+tail -f outputs/train_flatnet_lite/flatnet_lite/info.log
+
 .venv/bin/python inference.py -cn inference_flatnet \
-  checkpoint=outputs/train_flatnet_lite_debug/flatnet_lite_debug/model_best.pth \
-  output_dir=outputs/final_flatnet_lite_debug
+  checkpoint=outputs/train_flatnet_lite/flatnet_lite/checkpoint-epoch10.pth \
+  output_dir=outputs/final_flatnet_lite
 ```
 
 ## Custom Data
+
+Run on your own folder layout:
 
 ```bash
 .venv/bin/python inference.py -cn inference_custom \
