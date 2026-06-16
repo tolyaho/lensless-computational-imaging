@@ -17,6 +17,7 @@ checkpoints/
 .cometml-runs/
 wandb/
 *.log
+nohup.out
 
 docs/
 .ipynb_checkpoints
