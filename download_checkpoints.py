@@ -18,16 +18,19 @@ REQUIRED_CHECKPOINTS = {
 }
 
 DEFAULT_CHECKPOINT = "leadmm5_prepost_drunet8m.pth"
-MIN_BYTES = 1_000_000
+DEFAULT_MIN_BYTES = 1_000_000
+MIN_BYTES = {
+    "leadmm20.pth": 10_000,
+}
 
 
-def download_from_hf(repo_file: str, dest: Path) -> bool:
+def download_from_hf(repo_file: str, dest: Path, min_bytes: int) -> bool:
     from huggingface_hub import hf_hub_download
     from huggingface_hub.errors import EntryNotFoundError, RepositoryNotFoundError
 
     dest.parent.mkdir(parents=True, exist_ok=True)
 
-    if dest.exists() and dest.stat().st_size >= MIN_BYTES:
+    if dest.exists() and dest.stat().st_size >= min_bytes:
         print(f"[skip] {dest} already present")
         return True
 
@@ -46,7 +49,7 @@ def download_from_hf(repo_file: str, dest: Path) -> bool:
     shutil.copyfile(cached, dest)
 
     size = dest.stat().st_size
-    if size < MIN_BYTES:
+    if size < min_bytes:
         dest.unlink(missing_ok=True)
         raise SystemExit(f"download failed or file too small ({size} bytes): {dest.name}")
 
@@ -89,7 +92,11 @@ def main() -> None:
 
     for name in names:
         repo_file = CHECKPOINTS[name]
-        ok = download_from_hf(repo_file, output_dir / name)
+        ok = download_from_hf(
+            repo_file,
+            output_dir / name,
+            min_bytes=MIN_BYTES.get(name, DEFAULT_MIN_BYTES),
+        )
         if ok:
             continue
         if name == "flatnet_lite.pth" and args.all:
