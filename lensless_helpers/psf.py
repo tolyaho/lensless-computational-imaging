@@ -1,3 +1,17 @@
+# #############################################################################
+# psf.py
+# =================
+# get_psf is adapted from LenslessPiCam, lensless/hardware/trainable_mask.py (AdafruitLCD.get_psf)
+# https://github.com/LCAV/LenslessPiCam, licensed under the GNU AGPL v3.0
+# Original authors :
+# Yohann PERRON [yohann.perron@gmail.com]
+# Eric BEZZAM [ebezzam@gmail.com]
+#
+# Modified by Ho Dang Dung, June 2026: rewritten as a standalone function of mask values instead of a
+# trainable-mask method; simulate_psf_from_mask (DigiCam defaults, optional flip reversal) is new,
+# with parameter descriptions following the AdafruitLCD docstring.
+# #############################################################################
+
 import torch
 import numpy as np
 from waveprop.devices import slm_dict

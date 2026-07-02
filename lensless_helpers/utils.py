@@ -1,3 +1,17 @@
+# #############################################################################
+# utils.py
+# =================
+# Functions adapted from LenslessPiCam, lensless/utils/image.py and lensless/utils/io.py
+# https://github.com/LCAV/LenslessPiCam, licensed under the GNU AGPL v3.0
+# Original authors :
+# Eric BEZZAM [ebezzam@gmail.com]
+# Julien SAHLI [julien.sahli@epfl.ch]
+#
+# Modified by Ho Dang Dung, June 2026: rgb2gray, get_max_val, bayer2rgb_cc, print_image_info, resize
+# (image.py) and load_image, get_ctypes (io.py) merged into one module with their bodies unchanged;
+# the other functions were removed.
+# #############################################################################
+
 import torch
 import numpy as np
 import cv2

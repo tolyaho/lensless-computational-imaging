@@ -1,3 +1,16 @@
+# #############################################################################
+# slm.py
+# =================
+# Adapted from LenslessPiCam, lensless/hardware/slm.py
+# https://github.com/LCAV/LenslessPiCam, licensed under the GNU AGPL v3.0
+# Original authors :
+# Eric BEZZAM [ebezzam@gmail.com]
+#
+# Modified by Ho Dang Dung, June 2026: kept only get_programmable_mask, adafruit_sub2full,
+# full2subpattern and get_intensity_psf (bodies unchanged); hardware/remote-capture helpers removed;
+# imports re-pointed to lensless_helpers.
+# #############################################################################
+
 import os
 import numpy as np
 from scipy.ndimage import rotate as rotate_func

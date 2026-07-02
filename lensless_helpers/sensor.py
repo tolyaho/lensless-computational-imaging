@@ -1,3 +1,15 @@
+# #############################################################################
+# sensor.py
+# =================
+# Adapted from LenslessPiCam, lensless/hardware/sensor.py (upstream commit 9e1e8f1, 2024-02-23)
+# https://github.com/LCAV/LenslessPiCam, licensed under the GNU AGPL v3.0
+# Original authors :
+# Eric BEZZAM [ebezzam@gmail.com]
+#
+# Modified by Ho Dang Dung, June 2026: copied into lensless_helpers; module docstring removed;
+# imports re-pointed from lensless.utils to lensless_helpers.utils. The code is otherwise unchanged.
+# #############################################################################
+
 import numpy as np
 from enum import Enum
 from cv2 import resize
