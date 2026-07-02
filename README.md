@@ -8,8 +8,6 @@ Recovering photos from a camera with no lens. I compare classical ADMM, unrolled
 
 **Best result:** 17.31 dB PSNR, 0.445 SSIM and 0.577 LPIPS on the full DigiCam test split (1,500 real measurements). The classical ADMM-100 baseline gets 10.57 dB and is about 16x slower per image.
 
-**Origin:** a solo homework project for my AI360 coursework (2026). I wrote all the commits; third-party code and data are listed under [Credits](#credits).
-
 ## The problem
 
 A lensless camera puts a thin optical mask in front of the sensor instead of a lens. DigiCam uses a programmable LCD as the mask. Every scene point spreads over most of the sensor, so the raw measurement looks like colored noise. To recover the image, you invert a large, poorly conditioned convolution with the camera's point spread function (PSF).
@@ -255,7 +253,7 @@ Run on your own folder layout (`lensless/*.png` and `masks/*.npy` with matching 
 
 ## Limitations / current status
 
-- **Finished homework project.** It is not maintained as a library. Training curves are in my Comet workspace and not in the repo. The development unit tests were removed from tracking (`tests/` is git-ignored).
+- **Reproducibility:** Training curves are hosted in my Comet workspace rather than the repository; development tests are not included (`tests/` is git-ignored).
 - **No separate validation split.** During training, the validation loader uses the DigiCam test split (`datasets.val` in `src/configs/train.yaml`). The test numbers above are therefore not a fully held-out estimate.
 - **One run per method, no seeds or variance.** Differences of a few tenths of a dB (pre+post vs post) are not tested for significance.
 - **Absolute quality is still modest.** 17.3 dB reconstructions are recognisable but blurry, with grid-like artifacts. FlatNet-lite produces colored artifacts outside the scene region. Metrics are computed only inside the ROI, so those artifacts are not scored.
@@ -264,6 +262,7 @@ Run on your own folder layout (`lensless/*.png` and `masks/*.npy` with matching 
 
 ## Credits
 
+- **Project context:** Developed as an AI360 course project (2026).
 - Dataset: [DigiCam-Mirflickr-MultiMask-10K](https://huggingface.co/datasets/bezzam/DigiCam-Mirflickr-MultiMask-10K) by Eric Bezzam (MIT licence on the dataset card; scenes from MIRFLICKR). The dataset is downloaded at run time and not stored in this repo.
 - `lensless_helpers/`: the sensor, SLM, image and PSF-simulation utilities are adapted from [LenslessPiCam](https://github.com/LCAV/LenslessPiCam) (LCAV, AGPL-3.0), with the original authors named in each file header; see [`lensless_helpers/README.md`](lensless_helpers/README.md). It uses [`waveprop`](https://github.com/ebezzam/waveprop) (MIT) for wave propagation.
 - Training scaffold: `train.py`, `src/trainer/`, `src/logger/` and parts of `src/utils/` and `src/datasets/` follow Petr Grinberg's [pytorch_project_template](https://github.com/Blinorot/pytorch_project_template) (MIT). The models, losses, ADMM solvers, data pipeline, metrics, experiments and reports are my own work.
